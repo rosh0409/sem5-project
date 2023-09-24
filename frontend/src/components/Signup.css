@@ -1,0 +1,32 @@
+.l{
+    margin-top: 10px;
+    width: 110px;
+    height: 110px;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    border-radius: 50%;
+}
+.user_img{
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    align-self: center;
+    object-fit: cover;
+   
+}
+h1{
+    text-align: center;
+}
+.logo-s{
+    /* background-color: brown; */
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.file{
+    display: none;
+}
+form{
+    margin-top: 100px;
+}
