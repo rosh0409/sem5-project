@@ -7,10 +7,11 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import EmailIcon from '@mui/icons-material/Email';
 import { useNavigate } from 'react-router-dom';
 import PhoneIcon from '@mui/icons-material/Phone';
-// import axios from 'axios';
-// import { toast  } from 'react-toastify';
+import axios from 'axios';
+import toast from "react-hot-toast";
 
 const Signup = () => {
+  let navigate = useNavigate();
   const[file,setFile]=useState();
   const [user, setUser] = useState({
     name:"",
@@ -41,91 +42,68 @@ const Signup = () => {
       setUser({...user,[e.target.name]:e.target.files[0]})
   }
   const handleUser = async()=>{
+    const toastId = toast.loading('Loading...');
     if(user.name && user.username && user.email && user.password && user.cpassword && user.mobile && user.gender && user.profile){
       if(user.password === user.cpassword){
+        // console.log(user.username)
         const formdata = new FormData()
         formdata.append("profile",user.profile)
         formdata.append("name",user.name)
+        formdata.append("username",user.username)
         formdata.append("email",user.email)
         formdata.append("password",user.password)
         formdata.append("cpassword",user.cpassword)
         formdata.append("mobile",user.mobile)
         formdata.append("gender",user.gender)
-        console.log("user", user)
-        console.log("formdata", formdata)
-      //   await axios.post("http://localhost:8000/api/signup",
-      //   {
-      //     headers:{"Content-Type":"multipart/form-data"},
-      //   },
-      //   formdata).then((res)=>{
-      //     // console.log(res.data)
-      //     if(res.data.status === "success"){
-      //       toast.success(res.data.message,{
-      //         position:"top-right",
-      //         autoClose:3000,
-      //         hideProgressBar:false,
-      //         closeOnClick:true,
-      //         pauseOnHover:true,
-      //         progress:undefined,
-      //       })
-      //       navigate("/signin");
-      //     }
-      //     else{
-      //       console.log(res.data.status)
-      //       toast.error(res.data.message,{
-      //         position:"top-right",
-      //         autoClose:3000,
-      //         hideProgressBar:false,
-      //         closeOnClick:true,
-      //         pauseOnHover:true,
-      //         progress:undefined,
-      //       })
-      //       navigate("/signup");
-      //     }
-      //   }).catch((error)=>{
-      //     console.log(error.message)
-      //   })
-      //   // const res = {
-      //   //   status:"success",
-      //   //   message:"Successfully Registered :-("
-      //   // }
-      //   // console.log(res)
-      //   // setUser({name:"",
-      //   // username:"",
-      //   // email:"",
-      //   // password:"",
-      //   // cpassword:"",
-      //   // mobile:"",
-      //   // gender:""})
-      //   // console.log(user)
-      // }
-      // else{
-      //   setUser({name:user.name,
-      //   username:user.username,
-      //   email:user.email,
-      //   password:"",
-      //   cpassword:"",
-      //   mobile:user.mobile,
-      //   gender:user.gender})
-      //   const res = {
-      //     status:"failed",
-      //     message:"Password and Confirm Password does not match :-("
-      //   }
-      //   console.log(res)
+        const {data } = await axios.post("http://localhost:8000/api/signup",
+        formdata,
+        {
+          headers:{"Content-Type":"multipart/form-data"},
+        })
+        if(data.status === "success"){
+          toast.dismiss(toastId);
+          toast.success(data.message,
+            {
+            duration: 4000,
+            position: 'top-center'
+            })
+          navigate("/signin");
+        }
+        else{
+          toast.dismiss(toastId);
+          toast.error(data.message,{
+            duration: 4000,
+            position: 'top-center'
+            })
+          navigate("/signup");
+        }
+      }
+      else{
+        toast.dismiss(toastId);
+        setUser({
+          name:user.name,
+          username:user.username,
+          email:user.email,
+          password:"",
+          cpassword:"",
+          mobile:user.mobile,
+          gender:user.gender
+          })
+        toast.error("Password and Confirm Password does not match :-(",{
+          duration: 2000,
+          position: 'top-center'
+        })
       }
     }
     else{
-      const res = {
-        status:"failed",
-        message:"Please fill all details :-("
-      }
-      console.log(res)
+      toast.dismiss(toastId);
+      toast.error("Please fill all the fields :-( ",{
+        duration: 2000,
+        position: 'top-center'
+      })
     }
-  }
-  let navigate = useNavigate();
-  const navigateSignin = () =>{
-    navigate("/signin")
-  }
+    }
+
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100vw', height: '100vh' }}>
       <div style={{ width: '50%' }}>
@@ -268,7 +246,7 @@ const Signup = () => {
                 <Button variant="contained" fullWidth onClick={handleUser}>
                 Register
                 </Button>
-                <Button variant="text" fullWidth sx={{ mt: '20px' }} onClick={navigateSignin} >
+                <Button variant="text" fullWidth sx={{ mt: '20px' }} onClick={()=>{navigate("/signin")}}>
                 Sign In Here
                 </Button>
               </Stack>

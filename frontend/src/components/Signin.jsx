@@ -3,56 +3,48 @@ import { Button, TextField, Stack, AppBar, Box, InputAdornment, Link } from '@mu
 import KeyIcon from '@mui/icons-material/Key';
 import PersonIcon from '@mui/icons-material/Person';
 import axios from 'axios';
-import { toast  } from 'react-toastify';
 import {useNavigate} from "react-router-dom";
+import toast from 'react-hot-toast';
+axios.defaults.withCredentials=true;
 
 const Signin = () => {
+  let navigate = useNavigate();
   const [user, setUser] = useState({
     email:"",
     password:""
   });
   const handleUser = async() =>{
+    const toastId = toast.loading('Loading...');
     if(user.email &&  user.password){
-      await axios.post("http://localhost:8000/api/signin",user).then((res)=>{
-        console.log(res.data)
-        if(res.data.status === "success"){
-          toast.success(res.data.message,{
-            position:"top-right",
-            autoClose:3000,
-            hideProgressBar:false,
-            closeOnClick:true,
-            pauseOnHover:true,
-            progress:undefined,
+      const {data} = await axios.post("http://localhost:8000/api/signin",user,{withCredentials:true})
+      console.log(data)
+      if(data.status === "success"){
+        toast.dismiss(toastId);
+        toast.success(data.message,{
+          duration: 4000,
+          position: 'top-center'
           })
-          navigate("/")
-        }
-        else{
-          toast.error(res.data.message,{
-            position:"top-right",
-            autoClose:3000,
-            hideProgressBar:false,
-            closeOnClick:true,
-            pauseOnHover:true,
-            progress:undefined,
-          })
-          setUser({email:"",password:""})
-          navigate("/signin")
-        }
-      }).catch((error)=>{
-        console.log(error.message)
-      })
-    }else{
-      const res = {
-        status:"failed",
-        message:"Please fill all details :-("
+        navigate("/")
       }
-      console.log(res)
+      else{
+        toast.dismiss(toastId);
+        toast.error(data.message,{
+          duration: 4000,
+          position: 'top-center'
+          })
+        setUser({email:"",password:""})
+        navigate("/signin")
+      }
+    }
+    else{
+      toast.dismiss(toastId);
+      toast.error("Please fill all the fields :-( ",{
+        duration: 2000,
+        position: 'top-center'
+      })
     }
   }
-  let navigate = useNavigate();
-  const navigateSignup = () =>{
-    navigate("/signup")
-  }
+  
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100vw', height: '100vh' }}>
       <div style={{ width: '50%' }}>
@@ -102,7 +94,7 @@ const Signin = () => {
                 <Button variant="contained" fullWidth onClick={handleUser}>
                   Sign In
                 </Button>
-                <Button variant="text" fullWidth sx={{ mt: '20px' }} onClick={navigateSignup} >
+                <Button variant="text" fullWidth sx={{ mt: '20px' }} onClick={()=>{navigate("/signup")}}>
                   Register Here
                 </Button>
               </Stack>

@@ -8,13 +8,21 @@ import Product from "../models/Product.js";
 import jwt from "jsonwebtoken";
 import Razorpay from "razorpay";
 import crypto from "crypto";
-
-// import data from "./dataset.json";
-
+// import Dataset from "./dataset.json";
+import Data from "./dataset.js";
+// import axios from "axios";
+// import cheerio from "cheerio";
 
 const route = express.Router()
 
-
+// route.get("/url",(req,res)=>{
+//     console.log("hiii")
+//     axios.get(req.body.url).then((data)=>{
+//         console.log(data)
+//         const $ =  cheerio.load(data)
+//         res.send($("#a-offscreen"))
+//     })
+// })
 route.get("/home",(req,res)=>{
     res.send("Welcome to home page...")
 })
@@ -40,30 +48,87 @@ const storage = multer.diskStorage({
 })
 const upload = multer({storage:storage})
 
+//jwt token
+const generateAuthToken = async(id)=>{
+    try {
+        let token = jwt.sign(
+                {userID:id},
+                "RroshansinghRoshanSinghROSHANSINGHS",
+                {expiresIn:"1d"}
+                )
+        return token;
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+//get cookie verify user
+route.get("/verify-user",async(req,res)=>{
+    try{
+        // console.log(req.headers?.cookie.split("=")[1]);
+        const token = req.headers?.cookie.split("=")[1];
+        const decode = jwt.verify(token,"RroshansinghRoshanSinghROSHANSINGHS");
+        const user = await Users.find({_id:decode.userID})
+        if(user){
+            res.json({
+                "status":"success",
+                "message":"Authenticate User :-)",
+                user,
+            })
+        }
+        else{
+            res.json({
+                "status":"failed",
+                "message":"Unauthenticate User :-("
+            })
+        }
+        }
+    catch(err){
+    }
+    
+})
+
+//logout-user
+route.get("/logout-user",(req,res)=>{
+    try{
+        if(req.headers?.cookie.split("=")[0]){
+            res.clearCookie(req.headers?.cookie.split("=")[0]).json({
+                "status":"success",
+                "message":"User Logged Out :-)"
+            })
+        }
+        else{
+            res.json({
+                "status":"failed",
+                "message":"User not Logged Out :-("
+            })
+        }
+        
+    }
+    catch(err){
+        res.status(400).send(err.message)
+    }
+})
+
+
 // loging user
 route.post("/signin", async (req,res)=>{
     try {
         const { email,password } = req.body
         if(email && password) {
-            const user = await Users.findOne({email:email})
+            const user = await Users.findOne({email})
             console.log(user);
             if(user != null) {
                 const dePassword = await bcryptjs.compare(password,user.password)
                 if(email === user.email && dePassword){
-                    // const savedUser = await Users.findOne({email:email})
-                    // // Generate JWT Token
-                    // const token = jwt.sign(
-                    //     {userID:savedUser._id},
-                    //     process.env.JWT_SECRET_KEY,
-                    //     {expiresIn:"5d"}
-                    //     )
-                    const token = await user.generateAuthToken();
-                    console.log(token)
+                    const token = await generateAuthToken(user._id);
+                    // console.log(token)
                     res.cookie("shopzilla",token,{
-                        expires:new Date(Date.now() + 25892000000),
-                        httpOnly:true
-                    })
-                    res.json({
+                        expires:new Date(Date.now() + 86400000),
+                        httpOnly:true,
+                        path:"/",
+                        sameSite:"strict"
+                    }).json({
                         "status":"success",
                         "message":"Login Successfull :-)",
                         user,
@@ -88,19 +153,21 @@ route.post("/signin", async (req,res)=>{
             })
         }
     } catch (error) {
-        
+        res.status(400).send(error.message)
     }
 });
 
 //registering user
 route.post("/signup",upload.single("profile"), async (req,res)=>{
+    // console.log(req.body)
     try {
         const {name,username,email,password,cpassword,mobile,gender} = req.body
         const profile = req.file.filename
+        console.log(name,username,email,password,cpassword,mobile,gender,profile)
         if(name && username && email && password && cpassword && mobile && gender && profile){
             if(await Users.findOne({email})){
                 const dir = (path.resolve(path.join("public/uploads"+"/" + uniquefile)))
-                const file = fs.unlinkSync(dir)
+                fs.unlinkSync(dir)
                 res.send({
                     "status":"failed",
                     "message":"Email already exists :-("
@@ -109,7 +176,7 @@ route.post("/signup",upload.single("profile"), async (req,res)=>{
             else{
                 if(await Users.findOne({username})){
                     const dir = (path.resolve(path.join("public/uploads"+"/" + uniquefile)))
-                    const file = fs.unlinkSync(dir)
+                    fs.unlinkSync(dir)
                     res.send({
                         "status":"failed",
                         "message":"Username already taken :-("
@@ -126,7 +193,7 @@ route.post("/signup",upload.single("profile"), async (req,res)=>{
                             gender,
                             profile
                         })
-                        // user.save();
+                        user.save();
                         res.send({
                             "status":"success",
                             "message":"Registration successfull :-) ",
@@ -135,7 +202,7 @@ route.post("/signup",upload.single("profile"), async (req,res)=>{
                     }
                     else{
                         const dir = (path.resolve(path.join("public/uploads"+"/" + uniquefile)))
-                        const file = fs.unlinkSync(dir)
+                        fs.unlinkSync(dir)
                         res.send({
                             "status":"failed",
                             "message":"Password and Confirm Password does not match :-("
@@ -146,7 +213,7 @@ route.post("/signup",upload.single("profile"), async (req,res)=>{
         }
         else{
             const dir = (path.resolve(path.join("public/uploads"+"/" + uniquefile)))
-            const file = fs.unlinkSync(dir)
+            fs.unlinkSync(dir)
             res.json({
                 "status":"failed",
                 "message":"Please fill all the fields :-("
@@ -232,22 +299,85 @@ route.get("/get-product/:_id",async(req,res)=>{
             })
         }
     }
-    catch{
+    catch(err){
         res.status(400).send(err.message)
     }
     
 })
 
+//add-to-cart
+route.post("/add-to-cart",async(req,res)=>{
+    try {
+        if(req.headers?.cookie.split("=")[0]){
+            console.warn("adf")
+            const token = req.headers?.cookie.split("=")[1]
+            const decode = await jwt.verify(token,"RroshansinghRoshanSinghROSHANSINGHS");
+            console.log(token)
+            const user = await Users.find({_id:decode.userID})
+            // console.log(user)
+            if(user){
+                const index = req.body
+                console.log(index)
+                // console.log(req.body)
+                console.log("gvf",user._id)
+                // user.cart[0].id = index
+                await Users.updateOne({_id:user._id},{ $push: { cart: index } })
+                // console.log(cart);
+            }
+        }
+        else{
+            res.json({
+                "status":"failed",
+                "message":"Unauthenticated User"
+            })
+        }
+    } catch (err) {
+        res.status(400).send(err.message)
+    }
+})
+
+//mycart
+route.get("/mycart",async(req,res)=>{
+    try {
+        if(req.headers?.cookie.split("=")[0]){
+            const token = req.headers?.cookie.split("=")[1]
+            const decode = jwt.verify(token,"RroshansinghRoshanSinghROSHANSINGHS");
+            const user = await Users.find({_id:decode.userID})
+            res.json({
+                "status":"success",
+                "message":"Authenticate User :-)",
+                user,
+            })
+        }
+        else{
+            res.json({
+                "status":"failed",
+                "message":"Unauthenticated User"
+            })
+        }
+    } catch (err) {
+        res.status(400).send(err.message)
+    }
+})
+
 route.post("/search",async(req,res)=>{
     try {
-        const search = toString(req.body)
-        const name = await Product.find({pname:search})
-        const cat = await Product.find({pcat:search})
+        const {search} = req.body
+        console.log(search,req.body)
+        // const name = await Product.find({pname:search})
+        // const cat = await Product.find({pcat:search})
+        // Dataset.forEach(()=>{
+
+        // },Dataset.)
+        const pcat = await Data.filter(cat =>cat.pcat == search)
+        const pname = await Data.filter(name =>name.pname == search)
+        // res.redirect("/abc",{"pcat":pcat,"pname":pname})
+        console.log(pcat,pname)
         res.json({
             "status":"success",
             "message":"Search found :-)",
-            name,
-            cat
+            pname,
+            pcat
         })
     } catch (err) {
         res.status(400).send(err.message)
@@ -318,6 +448,8 @@ route.post("/payment-verification",async(req,res)=>{
     // console.log("r",razorpay_signature)
     // console.log("g",generated_signature)
     if (generated_signature == razorpay_signature) {
+        //save in database
+        //res.redirect
         res.send("payment is successfull");
     }
 })
@@ -326,68 +458,68 @@ route.get("/get-key",(req,res)=>{
     res.status(200).json({key:process.env.PAYMENT_KEY_ID})
 })
 
-route.post("/r",async(req,res)=>{
-    const{e,p}=req.body
-    if( e && p ){
-        if( e ==="rosh" && p === "1" ){
-            const token = jwt.sign(
-                {e},
-                "RroshansinghRoshanSinghROSHANSINGHS",
-                {expiresIn:"1d"}
-                )
-            console.log("t",token)
-            res.cookie("token",token,{
-                path:"/",
-                httpOnly:true,
-                expires:new Date(Date.now() + 1000 * 86400), //1 day
-                sameSite:"strict",
-                secure:true
-            })
-            res.json({
-                status:"success",
-                auth:1,
-                token
-            })
-        }
-        else{
-            res.json({
-                status:"failed",
-                auth:0
-            })
-        }
-    }
-    else{
-        res.json({
-            status:"failed",
-            auth:-1
-        })
-    }
-})
-route.post("/l",(req,res)=>{
-    const{e,p}=req.body
-    if( e && p ){
-        if( e ==="rosh" && p === "1" ){
-            console.log(req.cookies)
-            console.log(req.cookies.token)
-            res.json({
-                status:"success",
-                auth:1
-            })
-        }
-        else{
-            res.json({
-                status:"failed",
-                auth:0
-            })
-        }
-    }
-    else{
-        res.json({
-            status:"failed",
-            auth:-1
-        })
-    }
-})
+// route.post("/r",async(req,res)=>{
+//     const{e,p}=req.body
+//     if( e && p ){
+//         if( e ==="rosh" && p === "1" ){
+//             const token = jwt.sign(
+//                 {e},
+//                 "RroshansinghRoshanSinghROSHANSINGHS",
+//                 {expiresIn:"1d"}
+//                 )
+//             console.log("t",token)
+//             res.cookie("token",token,{
+//                 path:"/",
+//                 httpOnly:true,
+//                 expires:new Date(Date.now() + 1000 * 86400), //1 day
+//                 sameSite:"strict",
+//                 secure:true
+//             })
+//             res.json({
+//                 status:"success",
+//                 auth:1,
+//                 token
+//             })
+//         }
+//         else{
+//             res.json({
+//                 status:"failed",
+//                 auth:0
+//             })
+//         }
+//     }
+//     else{
+//         res.json({
+//             status:"failed",
+//             auth:-1
+//         })
+//     }
+// })
+// route.post("/l",(req,res)=>{
+//     const{e,p}=req.body
+//     if( e && p ){
+//         if( e ==="rosh" && p === "1" ){
+//             console.log(req.cookies)
+//             console.log(req.cookies.token)
+//             res.json({
+//                 status:"success",
+//                 auth:1
+//             })
+//         }
+//         else{
+//             res.json({
+//                 status:"failed",
+//                 auth:0
+//             })
+//         }
+//     }
+//     else{
+//         res.json({
+//             status:"failed",
+//             auth:-1
+//         })
+//     }
+// })
 
 
 

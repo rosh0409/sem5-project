@@ -27,32 +27,24 @@ const user = mongoose.Schema({
         type:String,
         require:true
     },
-    
+    cart:[]
 })
 
 user.pre("save", async function(next){
-    try{
-        const salt = await bcryptjs.genSalt(10)
-        const hashPassword = bcryptjs.hash(this.password,salt)
-        this.password = hashPassword
-        next()
-    }catch(error){
-        next(error.message)
-    }
-})
-
-user.methods.generateAuthToken = async function(){
     try {
-        let tokenGen = jwt.sign(
-                {userID:this._id},
-                "RroshansinghRoshanSinghROSHANSINGHS",
-                {expiresIn:"1d"}
-                )
-        this.tokens = this.tokens.concat({token:tokenGen});
-        await this.save();
-        return tokenGen;
+        if(!this.isModified("password")){
+            return next()
+        }
+        // hash paaword
+        const salt = await bcryptjs.genSalt(10)
+        const hashPass = await bcryptjs.hash(this.password,salt)
+        console.log(hashPass)
+        this.password = hashPass
+        next()
     } catch (error) {
         console.log(error.message)
     }
-}
+    
+})
+
 export default mongoose.model("user",user);
