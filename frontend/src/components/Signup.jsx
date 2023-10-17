@@ -81,7 +81,7 @@ const Signup = () => {
           "http://localhost:8000/api/signup",
           formdata,
           {
-            headers: { "Content-Type": "multipart/form-data" },
+            headers: { "Content-Type": "multipart/form-data", },
           }
         );
         if (data.status === "success") {

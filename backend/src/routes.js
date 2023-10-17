@@ -239,39 +239,49 @@ route.post("/signup", upload.single("profile"), async (req, res) => {
 });
 
 // Add Product
-route.post("/add-product", async (req, res) => {
+route.post("/add-product", upload.single("pimg"), async (req, res) => {
   try {
     console.log(req.body);
     const { pname, pprice, pdesc, pcat, pqty } = req.body;
-    // const pimg = req.file.filename;
-    console.log(pname, pprice, pdesc, pcat, pqty);
+    const pimg = req.file.filename;
+    console.log(pname, pprice, pdesc, pcat, pqty, pimg);
+    if (pname && pprice && pimg && pdesc && pcat && pqty) {
+      const product = await new Product({
+        pname,
+        pimg,
+        pcat,
+        pdesc,
+        pprice,
+        pqty,
+      });
+      product.save();
+      res.json({
+        status: "success",
+        message: "Product added successfully :-)",
+        product,
+      });
+    } else {
+      const dir = path.resolve(path.join("public/uploads" + "/" + uniquefile));
+      fs.unlinkSync(dir);
+      res.json({
+        status: "failed",
+        message: "Please fill all the fields :-(",
+      });
+    }
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+//Get Product
+route.get("/get-product", async (req, res) => {
+  try {
+    const product = await Product.find();
     res.json({
-      pname,
-      pprice,
-      pdesc,
-      pcat,
-      pqty,
+      status: "success",
+      message: "Product added successfully :-)",
+      product,
     });
-    // if( pname && pprice && pimg && pdesc && pcat ){
-    //     const product = await new Product({
-    //         pname,
-    //         pimg,
-    //         pcat,
-    //         pdesc,
-    //         pprice
-    //     })
-    //     res.json({
-    //         "status":"success",
-    //         "message":"Product added successfully :-)",
-    //         product
-    //     })
-    // }
-    // else{
-    //     res.json({
-    //         "status":"failed",
-    //         "message":"Please fill all the fields :-("
-    //     })
-    // }
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -322,7 +332,7 @@ route.get("/get-product/:_id", async (req, res) => {
 });
 
 //add-to-cart
-route.post("/add-to-cart", async (req, res) => {
+route.post("/add-to-cart/:id", async (req, res) => {
   try {
     if (req.headers?.cookie.split("=")[0]) {
       console.warn("adf");
@@ -335,13 +345,26 @@ route.post("/add-to-cart", async (req, res) => {
       const user = await Users.find({ _id: decode.userID });
       // console.log(user)
       if (user) {
-        const index = req.body;
-        console.log(index);
+        const id = req.params;
+        console.log(id);
         // console.log(req.body)
-        console.log("gvf", user._id);
+        console.log(user[0]._id.toString());
         // user.cart[0].id = index
-        await Users.updateOne({ _id: user._id }, { $push: { cart: index } });
-        // console.log(cart);
+        const cartProduct = await Users.updateOne(
+          { _id: user[0]._id },
+          { $push: { cart: id } }
+        );
+        if (cartProduct) {
+          res.json({
+            status: "success",
+            message: "Product added to cart",
+          });
+        } else {
+          res.json({
+            status: "failed",
+            message: "Something went wrong",
+          });
+        }
       }
     } else {
       res.json({
@@ -361,10 +384,22 @@ route.get("/mycart", async (req, res) => {
       const token = req.headers?.cookie.split("=")[1];
       const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
       const user = await Users.find({ _id: decode.userID });
+      const cart = user[0].cart;
+      const cartId = [];
+      cart.forEach((o) => {
+        cartId.push(o.id);
+      });
+      // console.log("f", cartId);
+      const cartProduct = await Product.find({
+        _id: {
+          $in: cartId,
+        },
+      });
+      console.log(cartProduct);
       res.json({
         status: "success",
         message: "Authenticate User :-)",
-        user,
+        cartProduct,
       });
     } else {
       res.json({
@@ -377,6 +412,7 @@ route.get("/mycart", async (req, res) => {
   }
 });
 
+//search
 route.post("/search", async (req, res) => {
   try {
     const { search } = req.body;

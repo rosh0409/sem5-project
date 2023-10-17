@@ -4,13 +4,15 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { isLoggedIn } from "../auth/auth";
 axios.defaults.withCredentials = true;
 const Navbar = () => {
   let navigate = useNavigate();
   const [user, setUser] = useState({});
+
+  // const [user, setUser] = useState({});
   //   const [state, setState] = useState(false);
   //   useEffect(() => {
   //     async function verifyUser() {
@@ -159,7 +161,7 @@ const Navbar = () => {
           <>
             <NavLink
               className="logo hover-border"
-              to="/view-cart"
+              to="/cart"
               style={{ textDecoration: "none", color: "black" }}
             >
               <Typography
@@ -174,13 +176,26 @@ const Navbar = () => {
               </Typography>
             </NavLink>
             <NavLink>
-              <Typography>
+              <Typography className="user-img">
                 <AccountCircleIcon
                   htmlColor="black"
                   fontSize="large"
                   onClick={handleLogout}
                 />
-                <div className="user"></div>
+                <div
+                  className="user-list"
+                  style={{
+                    width: "150px",
+                    height: "110px",
+                    position: "absolute",
+                  }}
+                >
+                  <ul style={{ listStyleType: "none" }}>
+                    <li>Profile</li>
+                    <li>notifications</li>
+                    <li>log-out</li>
+                  </ul>
+                </div>
               </Typography>
             </NavLink>
           </>

@@ -63,3 +63,19 @@
 .user:hover{
     display: block;
 }
+.user-list{
+    display: none;
+   
+}
+.user-img:hover{
+   .user-list{
+        width: 200px;
+       display: block;
+       color: black;
+       background-color: white;
+       text-align: left;
+       padding: 8px;
+   }
+
+}
+

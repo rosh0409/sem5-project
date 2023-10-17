@@ -11,7 +11,7 @@ import {
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Select from "@mui/material/Select"; //, { SelectChangeEvent }
 import { convertToBase64 } from "../utils/utils";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -37,12 +37,12 @@ const Addpro = () => {
     console.log(pname, pprice, pcat, pdesc, pqty, pimg);
     if ((pname, pprice, pcat, pdesc, pqty, pimg)) {
       const formdata = new FormData();
-      formdata.append("pname", product.pname);
-      formdata.append("pprice", product.pprice);
-      formdata.append("pdesc", product.pdesc);
-      formdata.append("pcat", product.pcat);
-      formdata.append("pqty", product.pqty);
-      formdata.append("pimg", product.pimg);
+      formdata.append("pimg", pimg);
+      formdata.append("pname", pname);
+      formdata.append("pprice", pprice);
+      formdata.append("pdesc", pdesc);
+      formdata.append("pcat", pcat);
+      formdata.append("pqty", pqty);
       console.log(formdata);
       formdata.forEach((a) => {
         console.log(a);
@@ -51,7 +51,10 @@ const Addpro = () => {
         "http://localhost:8000/api/add-product",
         formdata,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            withCredentials: true,
+          },
         }
       );
       if (data.status === "success") {
@@ -68,7 +71,7 @@ const Addpro = () => {
           pqty: "",
           pimg: new File([], ""),
         });
-        // navigate("/signin");
+        setFile("");
       } else {
         toast.dismiss(toastId);
         toast.error(data.message, {
@@ -149,7 +152,7 @@ const Addpro = () => {
                     labelId="demo-simple-select-label"
                     id="demo-simple-select"
                     label="Category"
-                    defaultValue={product.pcat}
+                    value={product.pcat}
                     name="pcat"
                     onChange={(e) => {
                       // console.log(e.target.name);
@@ -159,9 +162,11 @@ const Addpro = () => {
                       });
                     }}
                   >
-                    <MenuItem value="Electronics">Electronics</MenuItem>
-                    <MenuItem value="sports">fashion</MenuItem>
-                    <MenuItem value="home-applience">Home applience</MenuItem>
+                    <MenuItem value="Electronic">Electronic</MenuItem>
+                    <MenuItem value="Cloth">Cloth</MenuItem>
+                    <MenuItem value="Sport">Sport</MenuItem>
+                    <MenuItem value="Toy">Toy</MenuItem>
+                    <MenuItem value="Furniture">Furniture</MenuItem>
                   </Select>
                 </FormControl>
                 <TextField
