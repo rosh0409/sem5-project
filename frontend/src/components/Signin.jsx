@@ -1,70 +1,94 @@
-import React, { useState } from 'react';
-import { Button, TextField, Stack, AppBar, Box, InputAdornment, Link } from '@mui/material';
-import KeyIcon from '@mui/icons-material/Key';
-import PersonIcon from '@mui/icons-material/Person';
-import axios from 'axios';
-import {useNavigate} from "react-router-dom";
-import toast from 'react-hot-toast';
-axios.defaults.withCredentials=true;
+import React, { useState } from "react";
+import {
+  Button,
+  TextField,
+  Stack,
+  AppBar,
+  Box,
+  InputAdornment,
+  Link,
+} from "@mui/material";
+import KeyIcon from "@mui/icons-material/Key";
+import PersonIcon from "@mui/icons-material/Person";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+axios.defaults.withCredentials = true;
 
 const Signin = () => {
   let navigate = useNavigate();
   const [user, setUser] = useState({
-    email:"",
-    password:""
+    email: "",
+    password: "",
   });
-  const handleUser = async() =>{
-    const toastId = toast.loading('Loading...');
-    if(user.email &&  user.password){
-      const {data} = await axios.post("http://localhost:8000/api/signin",user,{withCredentials:true})
-      console.log(data)
-      if(data.status === "success"){
+  const handleUser = async () => {
+    const toastId = toast.loading("Loading...");
+    if (user.email && user.password) {
+      const { data } = await axios.post(
+        "http://localhost:8000/api/signin",
+        user,
+        { withCredentials: true }
+      );
+      console.log(data);
+      if (data.status === "success") {
         toast.dismiss(toastId);
-        toast.success(data.message,{
+        toast.success(data.message, {
           duration: 4000,
-          position: 'top-center'
-          })
-        navigate("/")
-      }
-      else{
+          position: "top-center",
+        });
+        localStorage.setItem("shopzilla_login", "true");
+        navigate("/");
+      } else {
         toast.dismiss(toastId);
-        toast.error(data.message,{
+        toast.error(data.message, {
           duration: 4000,
-          position: 'top-center'
-          })
-        setUser({email:"",password:""})
-        navigate("/signin")
+          position: "top-center",
+        });
+        setUser({ email: "", password: "" });
+        navigate("/signin");
       }
-    }
-    else{
+    } else {
       toast.dismiss(toastId);
-      toast.error("Please fill all the fields :-( ",{
+      toast.error("Please fill all the fields :-( ", {
         duration: 2000,
-        position: 'top-center'
-      })
+        position: "top-center",
+      });
     }
-  }
-  
+  };
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100vw', height: '100vh' }}>
-      <div style={{ width: '50%' }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100vw",
+        height: "100vh",
+      }}
+    >
+      <div style={{ width: "50%" }}>
         <form action="">
-          <AppBar position="static" sx={{ bgcolor: 'white', width: '550px', margin: '0 auto' }}>
+          <AppBar
+            position="static"
+            sx={{ bgcolor: "white", width: "550px", margin: "0 auto" }}
+          >
             <Box sx={{ p: 2 }}>
-              <h1 style={{ color: 'black' }}>Login Here</h1>
+              <h1 style={{ color: "black" }}>Login Here</h1>
               <Stack spacing={2}>
                 <TextField
                   id="email"
                   label="Username"
                   value={user.email}
-                  name='email'
-                  onChange={(e) => setUser({...user,[e.target.name]:e.target.value})}
+                  name="email"
+                  onChange={(e) =>
+                    setUser({ ...user, [e.target.name]: e.target.value })
+                  }
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position='end'>
+                      <InputAdornment position="end">
                         <PersonIcon />
                       </InputAdornment>
-                    )
+                    ),
                   }}
                   margin="normal"
                   required
@@ -73,28 +97,37 @@ const Signin = () => {
                 <TextField
                   id="password"
                   label="Password"
-                  name='password'
+                  name="password"
                   value={user.password}
-                  onChange={(e) => setUser({...user,[e.target.name]:e.target.value})}
+                  onChange={(e) =>
+                    setUser({ ...user, [e.target.name]: e.target.value })
+                  }
                   margin="normal"
-                  type='password'
+                  type="password"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
                         <KeyIcon />
                       </InputAdornment>
-                    )
+                    ),
                   }}
                   helperText="do not share your password"
                   required
                 />
-                <Link style={{ textAlign: 'left' }}>forget password</Link>
+                <Link style={{ textAlign: "left" }}>forget password</Link>
               </Stack>
-              <Stack direction={'row'} spacing={'3'} sx={{ mt: '20px' }}>
+              <Stack direction={"row"} spacing={"3"} sx={{ mt: "20px" }}>
                 <Button variant="contained" fullWidth onClick={handleUser}>
                   Sign In
                 </Button>
-                <Button variant="text" fullWidth sx={{ mt: '20px' }} onClick={()=>{navigate("/signup")}}>
+                <Button
+                  variant="text"
+                  fullWidth
+                  sx={{ mt: "20px" }}
+                  onClick={() => {
+                    navigate("/signup");
+                  }}
+                >
                   Register Here
                 </Button>
               </Stack>
@@ -108,82 +141,6 @@ const Signin = () => {
 
 export default Signin;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // import { useState } from "react";
 // import "./Signin.css";
 // import axios from "axios";
@@ -193,7 +150,7 @@ export default Signin;
 //         email:"",
 //         password:""
 //     })
-    
+
 //     const handleSubmit = (e) =>{
 //         e.preventDefault();
 //         axios.post("http://localhost:8000/api/signin",user
@@ -206,7 +163,7 @@ export default Signin;
 //         console.log(user);
 
 //     }
-    
+
 //     return(
 //         <>
 //             <div className="container">
