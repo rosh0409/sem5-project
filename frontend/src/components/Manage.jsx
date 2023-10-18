@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -8,8 +8,15 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { Grid, Box } from "@mui/material";
 import AdminPanel from "../AdminPannel";
+import axios from "axios";
 
 const Manage = () => {
+  useEffect(()=>{
+    const getOrders = async()=>{
+      const {data}= await axios.get("http://localhost:8000/api/all-order")
+      
+    }
+  })
   const row = [
     {
       name: "phone",

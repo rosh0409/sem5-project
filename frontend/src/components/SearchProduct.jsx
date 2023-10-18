@@ -17,10 +17,10 @@ const styles = {
 
 const SearchProduct = ()=>{
     const location = useLocation();
-    console.log(location.state)
+    // console.log(location.state)
     const{pname,pcat} = location.state
-    console.log(pname.length)
-    console.log(pcat.length)
+    // console.log(pname.length)
+    // console.log(pcat.length)
     // const handleClick = async(e,index) =>{
     //     // alert("h")
     //     const res = await axios.get("http://localhost:8000/api/verify-user")
@@ -83,7 +83,7 @@ const SearchProduct = ()=>{
                                         <CardMedia
                                         component="img"
                                         height="140px"
-                                        image={d.pimg}
+                                        image={"http://localhost:8000/static/" + d.pimg}
                                         alt=""
                                         />
                                         <CardContent>
@@ -126,7 +126,7 @@ const SearchProduct = ()=>{
                                         <CardMedia
                                         component="img"
                                         height="140px"
-                                        image={d.pimg}
+                                        image={"http://localhost:8000/static/" + d.pimg}
                                         alt=""
                                         />
                                         <CardContent>

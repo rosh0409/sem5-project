@@ -417,15 +417,10 @@ route.post("/search", async (req, res) => {
   try {
     const { search } = req.body;
     console.log(search, req.body);
-    // const name = await Product.find({pname:search})
-    // const cat = await Product.find({pcat:search})
-    // Dataset.forEach(()=>{
-
-    // },Dataset.)
-    const pcat = await Data.filter((cat) => cat.pcat == search);
-    const pname = await Data.filter((name) => name.pname == search);
-    // res.redirect("/abc",{"pcat":pcat,"pname":pname})
-    console.log(pcat, pname);
+    const query = search[0].toUpperCase() + search.slice(1);
+    // console.log(query);
+    const pname = await Product.find({pname:query})
+    const pcat = await Product.find({pcat:query})
     res.json({
       status: "success",
       message: "Search found :-)",
@@ -494,6 +489,11 @@ route.post("/payment", async (req, res) => {
     res.status(400).send(err.message);
   }
 });
+
+//product-detail
+route.get("/product-detail",(req,res)=>{
+
+})
 
 route.post("/payment-verification", async (req, res) => {
   console.log(req.body);

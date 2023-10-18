@@ -15,7 +15,7 @@ import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import dataset from "./dataset.json";
 import axios from "axios";
 import toast from "react-hot-toast";
-
+import {isLoggedIn} from "./auth/auth"
 const styles = {
   card: {
     maxWidth: 200,
@@ -80,22 +80,30 @@ const Home = () => {
   };
   const handleCart = async (id) => {
     console.log(id);
-    const res = await axios.post(
-      `http://localhost:8000/api/add-to-cart/${id}`,
-      // { index: index - 1 },
-      { withCredentials: true }
-    );
-    if (res.data.status === "success") {
-      toast.success(res.data.message, {
-        duration: 4000,
-        position: "top-center",
-      });
-    } else {
-      toast.error(res.data.message, {
+    if(isLoggedIn()){
+      const res = await axios.post(
+        `http://localhost:8000/api/add-to-cart/${id}`,
+        // { index: index - 1 },
+        { withCredentials: true }
+      );
+      if (res.data.status === "success") {
+        toast.success(res.data.message, {
+          duration: 4000,
+          position: "top-center",
+        });
+      } else {
+        toast.error(res.data.message, {
+          duration: 4000,
+          position: "top-center",
+        });
+      }
+    } else{
+      toast.error("Please Login First :-)", {
         duration: 4000,
         position: "top-center",
       });
     }
+    
   };
   useEffect(() => {
     const getProduct = async () => {

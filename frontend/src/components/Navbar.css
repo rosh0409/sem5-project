@@ -79,3 +79,7 @@
 
 }
 
+.hover-pointer:hover{
+    cursor: pointer;
+    color: blue;
+}

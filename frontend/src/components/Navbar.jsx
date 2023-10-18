@@ -3,10 +3,11 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Button, Typography } from "@mui/material";
+import { Button, Typography, colors } from "@mui/material";
 import { useState } from "react";
 import axios from "axios";
 import { isLoggedIn } from "../auth/auth";
+import toast from "react-hot-toast";
 axios.defaults.withCredentials = true;
 const Navbar = () => {
   let navigate = useNavigate();
@@ -71,9 +72,18 @@ const Navbar = () => {
       search,
       { withCredentials: true }
     );
-    console.log(data);
-    setSearch({ search: "" });
-    navigate("/search", { state: { pname: data.pname, pcat: data.pcat } });
+    
+    if(data){
+      console.log(data);
+      setSearch({ search: "" });
+      navigate("/search", { state: { pname: data.pname, pcat: data.pcat } });
+    }else{
+      toast.error("Something went wrong :-(", {
+        duration: 4000,
+        position: "top-center",
+      });
+      navigate("/")
+    }
   };
   return (
     <>
@@ -180,7 +190,6 @@ const Navbar = () => {
                 <AccountCircleIcon
                   htmlColor="black"
                   fontSize="large"
-                  onClick={handleLogout}
                 />
                 <div
                   className="user-list"
@@ -190,11 +199,13 @@ const Navbar = () => {
                     position: "absolute",
                   }}
                 >
-                  <ul style={{ listStyleType: "none" }}>
-                    <li>Profile</li>
-                    <li>notifications</li>
-                    <li>log-out</li>
-                  </ul>
+                  <table style={{ listStyleType: "none" }}>
+                    <tr><td className="hover-pointer">My Profile</td></tr>
+                    <tr><td className="hover-pointer">My Orders</td></tr>
+                    <tr><td onClick={handleLogout} className="hover-pointer">Logout</td></tr>
+                    
+                    
+                  </table>
                 </div>
               </Typography>
             </NavLink>

@@ -1,10 +1,17 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Avatar, Box, Button, Card, CardActionArea, CardContent, CardMedia, List, ListItem, ListItemAvatar, ListItemText, Stack, Typography } from '@mui/material'
 import { Grid } from "@mui/material";
 import AdminPanel from "../AdminPannel";
 import "./Dashboard.css";
+import axios from 'axios';
 
 const Dashboard = () => {
+  useEffect(()=>{
+    const getOrders = async()=>{
+      const {data}= await axios.get("http://localhost:8000/product-detail")
+      
+    }
+  })
   return (   
     <Grid container spacing={2}>
       <Grid item xs={3}>
