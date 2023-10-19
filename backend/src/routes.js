@@ -9,9 +9,10 @@ import jwt from "jsonwebtoken";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 // import Dataset from "./dataset.json";
-import Data from "./dataset.js";
-// import axios from "axios";
-// import cheerio from "cheerio";
+// import Data from "./dataset.js";
+import axios from "axios";
+import cheerio from "cheerio";
+import nodemailer from "nodemailer";
 
 const route = express.Router();
 
@@ -64,7 +65,7 @@ const generateAuthToken = async (id) => {
 //get cookie verify user
 route.get("/verify-user", async (req, res) => {
   try {
-    // console.log(req.headers?.cookie.split("=")[1]);
+    console.log(req.headers?.cookie.split("=")[1]);
     const token = req.headers?.cookie.split("=")[1];
     const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
     const user = await Users.find({ _id: decode.userID });
@@ -287,6 +288,9 @@ route.get("/get-product", async (req, res) => {
   }
 });
 
+//get user
+route.get("/get-user", (req, res) => {});
+
 //get user by id
 route.get("/get-user/:_id", async (req, res) => {
   try {
@@ -419,8 +423,8 @@ route.post("/search", async (req, res) => {
     console.log(search, req.body);
     const query = search[0].toUpperCase() + search.slice(1);
     // console.log(query);
-    const pname = await Product.find({pname:query})
-    const pcat = await Product.find({pcat:query})
+    const pname = await Product.find({ pname: query });
+    const pcat = await Product.find({ pcat: query });
     res.json({
       status: "success",
       message: "Search found :-)",
@@ -435,68 +439,40 @@ route.post("/search", async (req, res) => {
 //payment
 route.post("/payment", async (req, res) => {
   try {
-    const { pname, pprice, pcat, pdesc, pimg } = req.body;
+    const { _id } = req.body;
+    console.log(req.body);
+    console.log(_id);
     // console.log(typeof(pprice))
-    const amount = Number(pprice.replaceAll(",", ""));
-    console.log(amount * 100);
+    // const amount = Number(pprice.replaceAll(",", ""));
+    console.log(`http://localhost:8000/api/get-product/${_id}`);
+    // console.log(amount * 100);
+    const { data } = await axios.get(
+      `http://localhost:8000/api/get-product/${_id}`
+    );
+    const product = data.isExist;
+    console.log(typeof Number(data.isExist.pprice));
+
     var instance = new Razorpay({
       key_id: process.env.PAYMENT_KEY_ID,
       key_secret: process.env.PAYMENT_KEY_SECRET,
     });
     var options = {
-      amount: amount * 100,
+      amount: Number(product.pprice) * 100,
       currency: "INR",
       receipt: "reciept1",
     };
     const order = await instance.orders.create(options);
     res.send(order);
-    // instance.orders.create({
-    //     amount,
-    //     currency:"INR",
-    //     receipt:"reciept1"
-    // },(err,order)=>{
-    //     if(!err){
-    //         res.status(200).send({
-    //             success:true,
-    //             msg:"Order Successfull",
-    //             order_id:order.id,
-    //             amount:amount*100,
-    //             key_id:process.env.PAYMENT_KEY_ID,
-    //             product_name:pname,
-    //             description:pdesc,
-    //             contact:"987456321",
-    //             name:"Roshan Singh",
-    //             email:"roshan@gmail.com"
-    //         });
-    // }
-    // else{
-    //     res.status(400).send({success:false,msg:"Something went Wrong"})
-    // }
-    // })
-    // res.json({
-    //     "status":"success",
-    //     i
-    // })
-    // .then(()=>{
-    //     res.json({
-    //         "status":"success"
-    //     })
-    // }).catch((err)=>{
-    //     res.status(400).send(err.message)
-    // })
-    // instance.payments.capture(paymentId, amount, currency)
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-//product-detail
-route.get("/product-detail",(req,res)=>{
-
-})
-
-route.post("/payment-verification", async (req, res) => {
-  console.log(req.body);
+//payment verification
+route.post("/payment-verification/:uid/:pid", async (req, res) => {
+  console.log(req.params);
+  const { uid, pid } = req.params;
+  console.log(uid, pid);
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
     req.body;
   // console.log(razorpay_order_id,razorpay_payment_id,razorpay_signature)
@@ -509,11 +485,79 @@ route.post("/payment-verification", async (req, res) => {
   // console.log("g",generated_signature)
   if (generated_signature == razorpay_signature) {
     //save in database
+
+    const userOrder = await Users.updateOne(
+      { _id: uid },
+      { $push: { order: {pid,oid:razorpay_order_id} } }
+    );
     //res.redirect
     res.send("payment is successfull");
   }
 });
 
+//get notification
+route.get("/notify", async (req, res) => {
+  try {
+    const url = "http://192.168.50.184:3000/";
+    const browserAgent =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.46";
+    const { data: html } = await axios.get(url, {
+      headers: {
+        "Content-type": "application/json",
+        "User-Agent": browserAgent,
+      },
+    });
+    mailNotify(
+      "roshan.2002kumr@gmail.com",
+      "ccxf gtrl hkxv mvpj",
+      "roshan.2002kumr@student.sfit.ac.in"
+    );
+    // console.log(html);
+    let $ = cheerio.load(html);
+    $(".repeat>div").each((e, price) => {
+      // console.log($(price).find(".repeat").text());
+      // return false;
+      console.log($(price).text());
+      // res.json({ price: $(price).text() });
+    });
+    // const priceArray = price(".repeat");
+    // // console.log(price.text());
+    // console.log(priceArray.length);
+    // console.log(priceArray.text());
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+const mailNotify = (sender, password, reciever) => {
+  var transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: sender || "youremail@gmail.com", //sender
+      pass: password || "yourpassword",
+    },
+  });
+
+  var mailOptions = {
+    from: sender || "youremail@gmail.com", //sender
+    to: reciever || "myfriend@yahoo.com", //reciever
+    subject: "Sending Email using Node.js",
+    text: "That was easy!",
+  };
+
+  transporter.sendMail(mailOptions, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+};
+
+//product-detail
+route.get("/product-detail", (req, res) => {});
+
+//get key
 route.get("/get-key", (req, res) => {
   res.status(200).json({ key: process.env.PAYMENT_KEY_ID });
 });

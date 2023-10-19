@@ -83,3 +83,8 @@
     cursor: pointer;
     color: blue;
 }
+.user-profile{
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}

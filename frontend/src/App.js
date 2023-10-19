@@ -15,6 +15,8 @@ import Addpro from "./components/Addpro";
 import SearchProduct from "./components/SearchProduct";
 // import { useEffect, useState } from "react";
 import Cart from "./components/Cart";
+import UserProfile from "./components/UserProfile";
+import Checkout from "./components/Checkout";
 // import { isLoggedIn } from "./auth/auth";
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
           <Route exact path="/cart" element={<Cart />} />
           <Route exact path="/addpro" element={<Addpro />} />
           <Route exact path="/admin" element={<Dashboard />} />
+          <Route exact path="/my-profile" element={<UserProfile />} />
+          <Route exact path="/check/:_id" element={<Checkout />} />
           {/* <Route exact path="/r" element={<R />} />
           <Route exact path="/l" element={<L />} /> */}
         </Routes>

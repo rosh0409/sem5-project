@@ -2,7 +2,7 @@ import "./Navbar.css";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Button, Typography, colors } from "@mui/material";
 import { useState } from "react";
 import axios from "axios";
@@ -11,8 +11,19 @@ import toast from "react-hot-toast";
 axios.defaults.withCredentials = true;
 const Navbar = () => {
   let navigate = useNavigate();
-  const [user, setUser] = useState({});
-
+  const [user, setUser] = useState({ status: true });
+  // let a =1;
+  if (isLoggedIn() && user.status === true) {
+    axios
+      .get("http://localhost:8000/api/verify-user")
+      .then(({ data }) => {
+        // console.log(data.user[0]);
+        setUser(data.user[0]);
+      })
+      .catch((err) => {
+        console.log(err.message);
+      });
+  }
   // const [user, setUser] = useState({});
   //   const [state, setState] = useState(false);
   //   useEffect(() => {
@@ -72,17 +83,17 @@ const Navbar = () => {
       search,
       { withCredentials: true }
     );
-    
-    if(data){
+
+    if (data) {
       console.log(data);
       setSearch({ search: "" });
       navigate("/search", { state: { pname: data.pname, pcat: data.pcat } });
-    }else{
+    } else {
       toast.error("Something went wrong :-(", {
         duration: 4000,
         position: "top-center",
       });
-      navigate("/")
+      navigate("/");
     }
   };
   return (
@@ -187,10 +198,15 @@ const Navbar = () => {
             </NavLink>
             <NavLink>
               <Typography className="user-img">
-                <AccountCircleIcon
-                  htmlColor="black"
-                  fontSize="large"
-                />
+                {user.profile ? (
+                  <img
+                    className="user-profile"
+                    src={"http://localhost:8000/static/" + user.profile}
+                    alt="user-logo"
+                  />
+                ) : (
+                  <AccountCircleIcon htmlColor="black" fontSize="large" />
+                )}
                 <div
                   className="user-list"
                   style={{
@@ -200,11 +216,21 @@ const Navbar = () => {
                   }}
                 >
                   <table style={{ listStyleType: "none" }}>
-                    <tr><td className="hover-pointer">My Profile</td></tr>
-                    <tr><td className="hover-pointer">My Orders</td></tr>
-                    <tr><td onClick={handleLogout} className="hover-pointer">Logout</td></tr>
-                    
-                    
+                    <tr>
+                      <td className="hover-pointer">
+                        <Link to="/my-profile">My Profile</Link>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="hover-pointer">
+                        <Link to="/my-order">My Orders</Link>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td onClick={handleLogout} className="hover-pointer">
+                        Logout
+                      </td>
+                    </tr>
                   </table>
                 </div>
               </Typography>

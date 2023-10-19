@@ -67,11 +67,11 @@ const AdminPanel = () => {
           <MenuIcon sx={{ display: { xs: "block", sm: "none" } }} />
           <Box flex={1} sx={{ display: { xs: "none", sm: "block" } }}>
             <Box m={5} sx={{ position: "sticky" }}>
-              <Avatar
+              {/* <Avatar
                 onClick={() => setOpen(true)}
                 sx={{ width: "100px", height: "100px" }}
-                src={`http://localhost:8000/1694828763799Nitro_Wallpaper_5000x2813.jpg`}
-              />
+                src={`http://localhost:8000/static/1694828763799Nitro_Wallpaper_5000x2813.jpg`}
+              /> */}
 
               <Menu
                 id="demo-positioned-menu"
@@ -94,16 +94,29 @@ const AdminPanel = () => {
               </Menu>
             </Box>
             <Box position={"fixed"}>
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Avatar
+                  onClick={() => setOpen(true)}
+                  sx={{ width: "100px", height: "100px" }}
+                  src={`http://localhost:8000/static/1694828763799Nitro_Wallpaper_5000x2813.jpg`}
+                />
+              </Box>
               <List>
-              <NavLink to="/admin">
-                <ListItem disablePadding>
-                  <ListItemButton component="a">
-                    <ListItemIcon>
-                      <HomeIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Dashboard" />
-                  </ListItemButton>
-                </ListItem>
+                <NavLink to="/admin">
+                  <ListItem disablePadding>
+                    <ListItemButton component="a">
+                      <ListItemIcon>
+                        <HomeIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Dashboard" />
+                    </ListItemButton>
+                  </ListItem>
                 </NavLink>
               </List>
 
@@ -121,17 +134,17 @@ const AdminPanel = () => {
                 </List>
               </NavLink>
               <NavLink to="/manage">
-              <List>
-                <ListItem disablePadding>
-                  <ListItemButton component="a">
-                    <ListItemIcon>
-                      <EditCalendarIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Manage" />
-                  </ListItemButton>
-                </ListItem>
-              </List>
-</NavLink>
+                <List>
+                  <ListItem disablePadding>
+                    <ListItemButton component="a">
+                      <ListItemIcon>
+                        <EditCalendarIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Manage" />
+                    </ListItemButton>
+                  </ListItem>
+                </List>
+              </NavLink>
               {/* <Typography variant='p' sx={{position:"relative",float:"left"}}>Data</Typography> */}
 
               <List>

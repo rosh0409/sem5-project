@@ -12,10 +12,10 @@ import {
   Stack,
 } from "@mui/material";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
-import dataset from "./dataset.json";
 import axios from "axios";
 import toast from "react-hot-toast";
-import {isLoggedIn} from "./auth/auth"
+import { isLoggedIn } from "./auth/auth";
+import { useNavigate } from "react-router-dom";
 const styles = {
   card: {
     maxWidth: 200,
@@ -27,60 +27,66 @@ const styles = {
 };
 
 const Home = () => {
+  const navigate = useNavigate();
   const [product, setProduct] = useState([]);
   // const name = "Apple 12 pro max";
   // const price = 12000;
   // const img = "https://th.bing.com/th/id/OIP.aNNz524RootQYkZmQ3lSXAHaFj?w=284&h=213&c=7&r=0&o=5&dpr=1.3&pid=1.7";
 
-  const handleClick = async (e) => {
-    // alert("h")
-    const res = await axios.get("http://localhost:8000/api/verify-user");
-    console.log(res);
-    if (res.data.status === "success") {
-      const {
-        data: { key },
-      } = await axios("http://localhost:8000/api/get-key");
-      const {
-        data: { amount, id },
-      } = await axios.post("http://localhost:8000/api/payment", dataset[1]);
-      console.log(amount, id);
-      console.log(window);
-      var options = {
-        key: key, // Enter the Key ID generated from the Dashboard
-        amount: amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-        currency: "INR",
-        name: "Shopzilla", //your business name
-        description: "Test Transaction",
-        image: dataset[1],
-        order_id: id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-        callback_url: "http://localhost:8000/api/payment-verification",
-        prefill: {
-          //We recommend using the prefill parameter to auto-fill customer's contact information especially their phone number
-          name: "Gaurav Kumar", //your customer's name
-          email: "gaurav.kumar@example.com",
-          contact: "9000090000", //Provide the customer's phone number for better conversion rates
-        },
-        notes: {
-          address: "Razorpay Corporate Office",
-        },
-        theme: {
-          color: "#3399cc",
-        },
-      };
-      var rzp1 = new window.Razorpay(options);
-      rzp1.open();
-      e.preventDefault();
-    } else if (res.data.status === "failed") {
-      console.log("not");
-      toast.error("Please login fist :-(", {
-        duration: 4000,
-        position: "top-center",
-      });
-    }
-  };
+  // const handleClick = async (_id) => {
+  //   // alert("h")
+  //   const res = await axios.get("http://localhost:8000/api/verify-user");
+  //   console.log(res);
+  //   if (res.data.status === "success") {
+  //     const {
+  //       data: { key },
+  //     } = await axios("http://localhost:8000/api/get-key");
+  //     console.log(key);
+  //     // const product = {
+  //     //   _id: _id,
+  //     // };
+  //     const { data } = await axios.post("http://localhost:8000/api/payment", {
+  //       _id: _id,
+  //     });
+  //     console.log(data);
+  //     //   // console.log(amount, id);
+  //     //   // console.log(window);
+  //     var options = {
+  //       key: key, // Enter the Key ID generated from the Dashboard
+  //       amount: data.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+  //       currency: "INR",
+  //       name: "Shopzilla", //your business name
+  //       description: "Test Transaction",
+  //       image: "",
+  //       order_id: data.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+  //       callback_url: "http://localhost:8000/api/payment-verification",
+  //       prefill: {
+  //         //We recommend using the prefill parameter to auto-fill customer's contact information especially their phone number
+  //         name: "Gaurav Kumar", //your customer's name
+  //         email: "gaurav.kumar@example.com",
+  //         contact: "9000090000", //Provide the customer's phone number for better conversion rates
+  //       },
+  //       notes: {
+  //         address: "Razorpay Corporate Office",
+  //       },
+  //       theme: {
+  //         color: "#3399cc",
+  //       },
+  //     };
+  //     var rzp1 = new window.Razorpay(options);
+  //     rzp1.open();
+  //     // e.preventDefault();
+  //   } else if (res.data.status === "failed") {
+  //     console.log("not");
+  //     toast.error("Please login fist :-(", {
+  //       duration: 4000,
+  //       position: "top-center",
+  //     });
+  //   }
+  // };
   const handleCart = async (id) => {
     console.log(id);
-    if(isLoggedIn()){
+    if (isLoggedIn()) {
       const res = await axios.post(
         `http://localhost:8000/api/add-to-cart/${id}`,
         // { index: index - 1 },
@@ -97,13 +103,12 @@ const Home = () => {
           position: "top-center",
         });
       }
-    } else{
+    } else {
       toast.error("Please Login First :-)", {
         duration: 4000,
         position: "top-center",
       });
     }
-    
   };
   useEffect(() => {
     const getProduct = async () => {
@@ -139,23 +144,31 @@ const Home = () => {
                         {d.pname}
                       </Typography>
                       <Typography variant="body1" color="textSecondary">
-                        <ListItemIcon>
+                        <ListItemIcon
+                          className="repeat"
+                          style={{ paddingTop: "0px" }}
+                        >
+                          {/* <h5 className="price" style={{ padding: "0px" }}> */}
                           <CurrencyRupeeIcon />
                           {d.pprice}
+                          {/* </h5> */}
                         </ListItemIcon>
                       </Typography>
                       <Stack gap={2}>
                         <Button
                           color="primary"
                           variant="contained"
-                          onClick={(e) => handleClick(e)}
+                          onClick={() => {
+                            navigate(`/check/${d._id}`);
+                          }}
+                          // onClick={(e) => handleClick(d._id)}
                         >
-                          Buy
+                          Buy now
                         </Button>
                         <Button
                           color="secondary"
                           variant="outlined"
-                          onClick={(e) => handleCart(d._id)}
+                          onClick={(e) => handleCart(e, d._id)}
                         >
                           add to cart
                         </Button>
