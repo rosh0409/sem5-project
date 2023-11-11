@@ -13,9 +13,10 @@ import PersonIcon from "@mui/icons-material/Person";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import Footer from "./Footer";
 axios.defaults.withCredentials = true;
 
-const Signin = () => {
+const Signin = (props) => {
   let navigate = useNavigate();
   const [user, setUser] = useState({
     email: "",
@@ -37,6 +38,17 @@ const Signin = () => {
           position: "top-center",
         });
         localStorage.setItem("shopzilla_login", "true");
+        if (data.user.subs.length > 0) {
+          console.log("1");
+          if (data.user.subs[0].is === true) {
+            console.log("2");
+            localStorage.setItem("is", true);
+          } else {
+            console.log("3");
+            localStorage.setItem("is", false);
+          }
+        }
+        props.onSignin(data.user);
         navigate("/");
       } else {
         toast.dismiss(toastId);
@@ -135,6 +147,7 @@ const Signin = () => {
           </AppBar>
         </form>
       </div>
+      {/* <Footer /> */}
     </div>
   );
 };

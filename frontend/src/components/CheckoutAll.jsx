@@ -1,41 +1,45 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-// import CardActions from '@mui/material/CardActions';
-// import CardContent from '@mui/material/CardContent';
 import Stack from "@mui/material/Stack";
 import { Button, TextField } from "@mui/material";
 import axios from "axios";
 import { isLoggedIn } from "../auth/auth";
 import { payment } from "../utils/utils";
 import toast from "react-hot-toast";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 
-const Checkout = () => {
-  const location = useLocation();
+const CheckoutAll = () => {
   const navigate = useNavigate();
-  // console.log(state);
-  console.log(location.state);
-  const [product, setProduct] = useState({});
+  const [cart, setCart] = useState();
+  const [user, setUser] = useState({ status: true });
   const [orderUser, setOrderUser] = useState({
     name: "",
     mobile: "",
     email: "",
     address: "",
   });
-  const [user, setUser] = useState({ status: true });
-  // console.log(window.location.pathname.split("/")[2]);
-  const pid = window.location.pathname.split("/")[2];
-  axios
-    .get(`http://localhost:8000/api/get-product/${pid}`)
-    .then(({ data }) => {
-      //   console.log(data.isExist);
-      setProduct(data.isExist);
-    })
-    .catch((err) => {});
+  const location = useLocation();
+  const { product } = location.state;
+  const [total, setTotal] = useState(0);
 
-  // let a =1;
+  const totalPrice = () => {
+    let sum = 0;
+    product.forEach((p) => {
+      sum += Number(p.pprice);
+    });
+    // console.log(sum);
+    // setTotal(sum);
+    localStorage.getItem("is") ? (sum = sum + 50) : (sum = sum + 100);
+    // console.log(sum);
+    return sum;
+  };
+  // setCart(product);
+  // setProduct(location.state.product);
+  console.log("product", product);
+  console.log("state", location.state);
+
   if (isLoggedIn() && user.status === true) {
     axios
       .get("http://localhost:8000/api/verify-user")
@@ -48,17 +52,18 @@ const Checkout = () => {
       });
   }
 
-  //   const productName = "";
-  //   product.forEach((p) => {
-  //     productName += p.pname + " , ";
-  //   });
   const handlePay = async () => {
     // const res = await axios.get("http://localhost:8000/api/verify-user");
     // console.log(res);
     // if (res.data.status === "success") {
     if (isLoggedIn()) {
       console.log(orderUser);
-      payment(product, user, orderUser)
+      const productAll = {
+        _id: product[0]._id,
+        pname: "All",
+        pprice: totalPrice(),
+      };
+      payment(productAll, user, orderUser)
         .then(() => {
           navigate("/payment-succesfull");
         })
@@ -72,6 +77,7 @@ const Checkout = () => {
       });
     }
   };
+
   return (
     <>
       <Box
@@ -90,56 +96,66 @@ const Checkout = () => {
           }}
         >
           <h1>Order Details</h1>
-          <Card
-            sx={{
-              width: "100%",
-              padding: "40px",
-            }}
-          >
-            <Stack spacing={2}>
-              <Box
-                sx={{
-                  fontSize: "20px",
-                }}
-              >
-                <b>Product Name </b> : <span>{product.pname}</span>
-              </Box>
-              <Box
-                sx={{
-                  fontSize: "20px",
-                }}
-              >
-                <b>Price</b> :{" "}
-                <span>
-                  {"Rs "}
-                  {localStorage.getItem("is")
-                    ? product.pprice * 0.95
-                    : product.pprice}
-                </span>
-              </Box>
-              <Box
-                sx={{
-                  fontSize: "20px",
-                }}
-              >
-                <b>Delivery Charges </b>:{" "}
-                <span>Rs {localStorage.getItem("is") ? 50 : 100}</span>
-              </Box>
+          {product.map((product, index) => {
+            return (
+              <>
+                <Card
+                  sx={{
+                    width: "100%",
+                    padding: "40px",
+                  }}
+                >
+                  <Stack spacing={2}>
+                    <Box
+                      sx={{
+                        fontSize: "20px",
+                      }}
+                    >
+                      <b>{index + 1 + " . "} Product Name </b> :{" "}
+                      <span>{product.pname}</span>
+                    </Box>
+                    <Box
+                      sx={{
+                        fontSize: "20px",
+                      }}
+                    >
+                      <b>Price</b> :{" "}
+                      <span>
+                        {"Rs "}
+                        {localStorage.getItem("is")
+                          ? product.pprice * 0.95
+                          : product.pprice}
+                      </span>
+                    </Box>
+                    <Box
+                      sx={{
+                        fontSize: "20px",
+                      }}
+                    ></Box>
 
-              <Box
-                sx={{
-                  fontSize: "30px",
-                  fontWeight: "900",
-                  color: "blue",
-                }}
-              >
-                Total : Rs &nbsp;
-                {localStorage.getItem("is")
-                  ? Number(product.pprice) * 0.95 + 50
-                  : Number(product.pprice) + 100}
-              </Box>
-            </Stack>
-          </Card>
+                    <Box
+                      sx={{
+                        fontSize: "30px",
+                        fontWeight: "900",
+                        color: "blue",
+                      }}
+                    >
+                      Total : Rs &nbsp;
+                      {localStorage.getItem("is")
+                        ? Number(product.pprice) * 0.95
+                        : Number(product.pprice)}
+                    </Box>
+                  </Stack>
+                </Card>
+              </>
+            );
+          })}
+          <b>Delivery Charges </b>:{" "}
+          <span>Rs {localStorage.getItem("is") ? 50 : 100}</span>
+          <h3>
+            Total Cart value is :{" "}
+            {localStorage.getItem("is") ? totalPrice() * 0.95 : totalPrice()}
+          </h3>
         </Box>
         <Box
           sx={{
@@ -222,4 +238,4 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;
+export default CheckoutAll;

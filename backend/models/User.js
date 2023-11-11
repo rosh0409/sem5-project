@@ -33,6 +33,8 @@ const user = mongoose.Schema({
   },
   cart: [],
   order: [],
+  notify: [],
+  subs: [],
 });
 
 user.pre("save", async function (next) {

@@ -12,7 +12,8 @@ import crypto from "crypto";
 // import Data from "./dataset.js";
 import axios from "axios";
 import cheerio from "cheerio";
-import nodemailer from "nodemailer";
+import User from "../models/User.js";
+// import puppeteer from "puppeteer";
 
 const route = express.Router();
 
@@ -65,7 +66,7 @@ const generateAuthToken = async (id) => {
 //get cookie verify user
 route.get("/verify-user", async (req, res) => {
   try {
-    console.log(req.headers?.cookie.split("=")[1]);
+    // console.log(req.headers?.cookie.split("=")[1]);
     const token = req.headers?.cookie.split("=")[1];
     const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
     const user = await Users.find({ _id: decode.userID });
@@ -109,7 +110,7 @@ route.post("/signin", async (req, res) => {
     const { email, password } = req.body;
     if (email && password) {
       const user = await Users.findOne({ email });
-      console.log(user);
+      // console.log(user);
       if (user != null) {
         const dePassword = await bcryptjs.compare(password, user.password);
         if (email === user.email && dePassword) {
@@ -339,35 +340,61 @@ route.get("/get-product/:_id", async (req, res) => {
 route.post("/add-to-cart/:id", async (req, res) => {
   try {
     if (req.headers?.cookie.split("=")[0]) {
-      console.warn("adf");
+      // console.warn("adf");
       const token = req.headers?.cookie.split("=")[1];
-      const decode = await jwt.verify(
-        token,
-        "RroshansinghRoshanSinghROSHANSINGHS"
-      );
-      console.log(token);
+      const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
+      // console.log(token);
       const user = await Users.find({ _id: decode.userID });
-      // console.log(user)
-      if (user) {
-        const id = req.params;
-        console.log(id);
-        // console.log(req.body)
-        console.log(user[0]._id.toString());
-        // user.cart[0].id = index
-        const cartProduct = await Users.updateOne(
+      console.log(user[0]);
+      if (user[0]) {
+        console.log(req.params);
+        const { id } = req.params;
+        console.log("id", id);
+        // const userCart = user[0].cart;
+        // console.log("cart", cart);
+        // console.log("productExist1");
+        // const { cart } = await Users.find(
+        //   { _id: user[0]._id },
+        //   { "cart.id": id }
+        // )[0];
+        const productExist = await Users.find(
           { _id: user[0]._id },
-          { $push: { cart: id } }
+          { cart: { $elemMatch: { id } } }
         );
-        if (cartProduct) {
-          res.json({
-            status: "success",
-            message: "Product added to cart",
-          });
+        const { cart } = productExist[0];
+        console.log(cart);
+        // console.log("productExist3", productExist[0].cart);
+        if (cart.length > 0) {
+          console.log(cart[0].qty);
+          const updatedCart = await User.updateOne(
+            { _id: user[0]._id, "cart.id": cart[0].id },
+            { $inc: { "cart.$.qty": 1 } }
+            // { $set: { cart: { id: { qty: qty + 1 } } } }
+          );
+          console.log(cart[0].qty);
+          console.log(updatedCart);
         } else {
-          res.json({
-            status: "failed",
-            message: "Something went wrong",
-          });
+          console.log("2");
+          Users.updateOne(
+            { _id: user[0]._id },
+            { $push: { cart: { id, qty: 1 } } }
+          )
+            .then((cartProduct) => {
+              if (cartProduct) {
+                res.json({
+                  status: "success",
+                  message: "Product added to cart",
+                });
+              } else {
+                res.json({
+                  status: "failed",
+                  message: "Something went wrong",
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err.message);
+            });
         }
       }
     } else {
@@ -381,6 +408,38 @@ route.post("/add-to-cart/:id", async (req, res) => {
   }
 });
 
+// remove from cart
+route.get("/remove-cart/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    // console.log(req.headers.cookie.split("=")[1]);
+    // console.log(id);
+    const token = req.headers?.cookie.split("=")[1];
+    const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
+    const user = await Users.findOne({ _id: decode.userID });
+    console.log(user);
+    const removedItem = await Users.updateOne(
+      { _id: user._id },
+      { $pull: { cart: { id: id } } }
+    );
+    // console.log(removedItem);
+    if (removedItem) {
+      res.json({
+        status: "success",
+        message: "Product removed from cart",
+        removedItem,
+      });
+    } else {
+      res.json({
+        status: "failed",
+        message: "Something went wrong",
+      });
+    }
+  } catch (error) {
+    res.status(400).send(err.message);
+  }
+});
+
 //mycart
 route.get("/mycart", async (req, res) => {
   try {
@@ -388,9 +447,10 @@ route.get("/mycart", async (req, res) => {
       const token = req.headers?.cookie.split("=")[1];
       const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
       const user = await Users.find({ _id: decode.userID });
-      const cart = user[0].cart;
+      const userCart = user[0].cart;
+      // console.log(userCart);
       const cartId = [];
-      cart.forEach((o) => {
+      userCart.forEach((o) => {
         cartId.push(o.id);
       });
       // console.log("f", cartId);
@@ -399,12 +459,62 @@ route.get("/mycart", async (req, res) => {
           $in: cartId,
         },
       });
-      console.log(cartProduct);
+      // console.log(cartProduct);
       res.json({
         status: "success",
         message: "Authenticate User :-)",
         cartProduct,
+        userCart,
       });
+    } else {
+      res.json({
+        status: "failed",
+        message: "Unauthenticated User",
+      });
+    }
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+//add-to-notify
+route.get("/add-to-notify/:id", async (req, res) => {
+  try {
+    if (req.headers?.cookie.split("=")[0]) {
+      // console.warn("adf");
+      const token = req.headers?.cookie.split("=")[1];
+      const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
+      // console.log(token);
+      const user = await Users.find({ _id: decode.userID });
+      // console.log(user)
+      if (user) {
+        console.log(req.params);
+        const { id } = req.params;
+        // console.log("id", id);
+        // const cart = user[0].cart;
+        // console.log("cart", cart);
+        // if(){
+
+        // }
+        // console.log(req.body)
+        // console.log(user[0]._id.toString());
+        // user.cart[0].id = index
+        const notify = await Users.updateOne(
+          { _id: user[0]._id },
+          { $push: { notify: id } }
+        );
+        if (notify) {
+          res.json({
+            status: "success",
+            message: "Product added for receiving notification",
+          });
+        } else {
+          res.json({
+            status: "failed",
+            message: "Something went wrong",
+          });
+        }
+      }
     } else {
       res.json({
         status: "failed",
@@ -436,28 +546,118 @@ route.post("/search", async (req, res) => {
   }
 });
 
-//payment
-route.post("/payment", async (req, res) => {
+//get suscription
+route.post("/suscribing", async (req, res) => {
   try {
-    const { _id } = req.body;
-    console.log(req.body);
-    console.log(_id);
-    // console.log(typeof(pprice))
-    // const amount = Number(pprice.replaceAll(",", ""));
-    console.log(`http://localhost:8000/api/get-product/${_id}`);
-    // console.log(amount * 100);
-    const { data } = await axios.get(
-      `http://localhost:8000/api/get-product/${_id}`
-    );
-    const product = data.isExist;
-    console.log(typeof Number(data.isExist.pprice));
-
+    console.log("yes");
+    const { selectedPlan } = req.body;
+    console.log("selectedPlan", selectedPlan);
+    const token = req.headers?.cookie.split("=")[1];
+    const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
+    const user = await Users.findOne({ _id: decode.userID });
+    console.log(user);
     var instance = new Razorpay({
       key_id: process.env.PAYMENT_KEY_ID,
       key_secret: process.env.PAYMENT_KEY_SECRET,
     });
     var options = {
-      amount: Number(product.pprice) * 100,
+      amount:
+        selectedPlan === "basic"
+          ? 99 * 100
+          : selectedPlan === "standard"
+          ? 199 * 100
+          : 599 * 100,
+      currency: "INR",
+      receipt: "reciept1",
+    };
+    const order = await instance.orders.create(options);
+    res.json({
+      status: "success",
+      message: "",
+      order,
+      user,
+    });
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+//saving suscribed
+route.post("/suscribed/:id/:selectedPlan", async (req, res) => {
+  console.log(req.params);
+  const { id, selectedPlan } = req.params;
+  console.log(id, selectedPlan);
+  // const user = User.findOne({ _id: req.params.id });
+  // console.log(user);
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+    req.body;
+  console.log(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  const generated_signature = crypto
+    .createHmac("sha256", process.env.PAYMENT_KEY_SECRET)
+    .update(body.toString())
+    .digest("hex");
+  if (generated_signature == razorpay_signature) {
+    //save in database
+    // console.log(user._id, req.params.selectedPlan);
+    const userSubs = await Users.updateOne(
+      { _id: id },
+      {
+        $push: {
+          subs: { is: true, plan: selectedPlan, at: Date.now() },
+        },
+      }
+    );
+    //res.redirect
+    console.log(userSubs);
+    res.send("payment is successfull");
+  }
+});
+
+//payment
+route.post("/payment", async (req, res) => {
+  try {
+    console.log("cookie", req.headers.cookie);
+    const { _id } = req.body;
+    console.log(req.body);
+    console.log(_id);
+    const token = req.headers.cookie.split("=")[1];
+    console.log("token", token);
+    const decode = jwt.verify(token, "RroshansinghRoshanSinghROSHANSINGHS");
+    const user = await Users.findOne({ _id: decode.userID });
+    console.log(user);
+    // const amount = Number(pprice.replaceAll(",", ""));
+    // console.log(`http://localhost:8000/api/get-product/${_id}`);
+    // console.log(amount * 100);
+    const { data } = await axios.get(
+      `http://localhost:8000/api/get-product/${_id}`
+    );
+    console.log(data);
+    const product = data.isExist;
+    console.log(typeof Number(data.isExist.pprice));
+
+    console.log(product);
+    var instance = new Razorpay({
+      key_id: process.env.PAYMENT_KEY_ID,
+      key_secret: process.env.PAYMENT_KEY_SECRET,
+    });
+    var amount = 0;
+    if (user.subs.length > 0) {
+      console.log("1");
+      if (user.subs[0].is === true) {
+        console.log("2");
+        amount = Number(product.pprice) * 95 + 50 * 100;
+        // localStorage.setItem("is", true);
+      } else {
+        console.log("3");
+        amount = (Number(product.pprice) + 100) * 100;
+      }
+    } else {
+      console.log("4");
+      amount = (Number(product.pprice) + 100) * 100;
+    }
+    var options = {
+      amount: amount,
       currency: "INR",
       receipt: "reciept1",
     };
@@ -488,71 +688,23 @@ route.post("/payment-verification/:uid/:pid", async (req, res) => {
 
     const userOrder = await Users.updateOne(
       { _id: uid },
-      { $push: { order: {pid,oid:razorpay_order_id} } }
+      { $push: { order: { pid, oid: razorpay_order_id } } }
     );
     //res.redirect
-    res.send("payment is successfull");
+    // res.json({
+    //   status: "success",
+    //   message: "Payment Successfull :-)",
+    // });
+    res.redirect("http://localhost:3000/payment-successfull");
+    // res.render("/")
+  } else {
+    res.redirect("http://localhost:3000/check");
+    // res.json({
+    //   status: "failed",
+    //   message: "Payment Unsuccessfull :-(",
+    // });
   }
 });
-
-//get notification
-route.get("/notify", async (req, res) => {
-  try {
-    const url = "http://192.168.50.184:3000/";
-    const browserAgent =
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.46";
-    const { data: html } = await axios.get(url, {
-      headers: {
-        "Content-type": "application/json",
-        "User-Agent": browserAgent,
-      },
-    });
-    mailNotify(
-      "roshan.2002kumr@gmail.com",
-      "ccxf gtrl hkxv mvpj",
-      "roshan.2002kumr@student.sfit.ac.in"
-    );
-    // console.log(html);
-    let $ = cheerio.load(html);
-    $(".repeat>div").each((e, price) => {
-      // console.log($(price).find(".repeat").text());
-      // return false;
-      console.log($(price).text());
-      // res.json({ price: $(price).text() });
-    });
-    // const priceArray = price(".repeat");
-    // // console.log(price.text());
-    // console.log(priceArray.length);
-    // console.log(priceArray.text());
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
-
-const mailNotify = (sender, password, reciever) => {
-  var transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: sender || "youremail@gmail.com", //sender
-      pass: password || "yourpassword",
-    },
-  });
-
-  var mailOptions = {
-    from: sender || "youremail@gmail.com", //sender
-    to: reciever || "myfriend@yahoo.com", //reciever
-    subject: "Sending Email using Node.js",
-    text: "That was easy!",
-  };
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
-};
 
 //product-detail
 route.get("/product-detail", (req, res) => {});
@@ -561,68 +713,5 @@ route.get("/product-detail", (req, res) => {});
 route.get("/get-key", (req, res) => {
   res.status(200).json({ key: process.env.PAYMENT_KEY_ID });
 });
-
-// route.post("/r",async(req,res)=>{
-//     const{e,p}=req.body
-//     if( e && p ){
-//         if( e ==="rosh" && p === "1" ){
-//             const token = jwt.sign(
-//                 {e},
-//                 "RroshansinghRoshanSinghROSHANSINGHS",
-//                 {expiresIn:"1d"}
-//                 )
-//             console.log("t",token)
-//             res.cookie("token",token,{
-//                 path:"/",
-//                 httpOnly:true,
-//                 expires:new Date(Date.now() + 1000 * 86400), //1 day
-//                 sameSite:"strict",
-//                 secure:true
-//             })
-//             res.json({
-//                 status:"success",
-//                 auth:1,
-//                 token
-//             })
-//         }
-//         else{
-//             res.json({
-//                 status:"failed",
-//                 auth:0
-//             })
-//         }
-//     }
-//     else{
-//         res.json({
-//             status:"failed",
-//             auth:-1
-//         })
-//     }
-// })
-// route.post("/l",(req,res)=>{
-//     const{e,p}=req.body
-//     if( e && p ){
-//         if( e ==="rosh" && p === "1" ){
-//             console.log(req.cookies)
-//             console.log(req.cookies.token)
-//             res.json({
-//                 status:"success",
-//                 auth:1
-//             })
-//         }
-//         else{
-//             res.json({
-//                 status:"failed",
-//                 auth:0
-//             })
-//         }
-//     }
-//     else{
-//         res.json({
-//             status:"failed",
-//             auth:-1
-//         })
-//     }
-// })
 
 export default route;

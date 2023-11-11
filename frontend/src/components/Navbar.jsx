@@ -8,22 +8,33 @@ import { useState } from "react";
 import axios from "axios";
 import { isLoggedIn } from "../auth/auth";
 import toast from "react-hot-toast";
+import { Box } from "@mui/system";
+import VerifiedIcon from "@mui/icons-material/Verified";
+
 axios.defaults.withCredentials = true;
-const Navbar = () => {
+const Navbar = ({ data }) => {
+  const [pro, setPro] = useState(false);
   let navigate = useNavigate();
   const [user, setUser] = useState({ status: true });
+  // const [subs, setSubs] = useState([data.subs]);
+  // if (data.subs) {
+  //   // console.log(data.length);
+  //   setSubs(data.subs);
+  // }
   // let a =1;
   if (isLoggedIn() && user.status === true) {
     axios
       .get("http://localhost:8000/api/verify-user")
       .then(({ data }) => {
-        // console.log(data.user[0]);
+        // console.log(data.user[0].subs);
         setUser(data.user[0]);
+        // setSubs(user.subs);
       })
       .catch((err) => {
         console.log(err.message);
       });
   }
+
   // const [user, setUser] = useState({});
   //   const [state, setState] = useState(false);
   //   useEffect(() => {
@@ -51,12 +62,31 @@ const Navbar = () => {
   //   }, []);
   const handleLogout = async () => {
     const res = await axios.get("http://localhost:8000/api/logout-user");
-    if (res.data.status === "success") {
-      //   console.log(isLoggedIn());
+    if (res) {
+      if (res.data.status === "success") {
+        //   console.log(isLoggedIn());
+        localStorage.removeItem("shopzilla_login");
+        localStorage.removeItem("is");
+        //   window.location.reload();
+        navigate("/");
+        //   console.log(isLoggedIn());
+      } else {
+        localStorage.removeItem("shopzilla_login");
+        localStorage.removeItem("is");
+        toast.error("You are already Logged out :-(", {
+          duration: 4000,
+          position: "top-center",
+        });
+        navigate("/");
+      }
+    } else {
       localStorage.removeItem("shopzilla_login");
-      //   window.location.reload();
+      localStorage.removeItem("is");
+      toast.error("You are already Logged out :-(", {
+        duration: 4000,
+        position: "top-center",
+      });
       navigate("/");
-      //   console.log(isLoggedIn());
     }
   };
   // const VerfyUser = ()=>{
@@ -134,6 +164,7 @@ const Navbar = () => {
             }}
           />
         </div>
+
         {!isLoggedIn() ? (
           <>
             <NavLink
@@ -171,7 +202,7 @@ const Navbar = () => {
               >
                 <Button
                   color="primary"
-                  variant="outlined" /*onClick={(e)=>handleClick(e,index)}*/
+                  variant="contained" /*onClick={(e)=>handleClick(e,index)}*/
                 >
                   Signup
                 </Button>
@@ -199,11 +230,30 @@ const Navbar = () => {
             <NavLink>
               <Typography className="user-img">
                 {user.profile ? (
-                  <img
-                    className="user-profile"
-                    src={"http://localhost:8000/static/" + user.profile}
-                    alt="user-logo"
-                  />
+                  <>
+                    <img
+                      className="user-profile"
+                      src={"http://localhost:8000/static/" + user.profile}
+                      alt="user-logo"
+                    />
+                    {localStorage.getItem("is") ? (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: "0px",
+                          marginLeft: "37px",
+                        }}
+                      >
+                        <VerifiedIcon
+                          sx={{
+                            color: "white",
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <></>
+                    )}
+                  </>
                 ) : (
                   <AccountCircleIcon htmlColor="black" fontSize="large" />
                 )}
@@ -226,6 +276,24 @@ const Navbar = () => {
                         <Link to="/my-order">My Orders</Link>
                       </td>
                     </tr>
+                    {localStorage.getItem("is") ? (
+                      <>
+                        <tr>
+                          <td className="hover-pointer">
+                            <Link to="/s">Premium User</Link>
+                          </td>
+                        </tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr>
+                          <td className="hover-pointer">
+                            <Link to="/subs">Get Premium</Link>
+                          </td>
+                        </tr>
+                      </>
+                    )}
+
                     <tr>
                       <td onClick={handleLogout} className="hover-pointer">
                         Logout

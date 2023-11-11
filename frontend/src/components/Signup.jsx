@@ -22,6 +22,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { convertToBase64 } from "../utils/utils";
+import Footer from "./Footer";
 
 const Signup = () => {
   let navigate = useNavigate();
@@ -81,7 +82,7 @@ const Signup = () => {
           "http://localhost:8000/api/signup",
           formdata,
           {
-            headers: { "Content-Type": "multipart/form-data", },
+            headers: { "Content-Type": "multipart/form-data" },
           }
         );
         if (data.status === "success") {
@@ -334,6 +335,7 @@ const Signup = () => {
           </AppBar>
         </form>
       </div>
+      {/* <Footer /> */}
     </div>
   );
 };
